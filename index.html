@@ -16,6 +16,7 @@
                 padding-top: 10vh;
                 border-radius: 10px;
                 background: linear-gradient(45deg, #1abc89, #6db020);
+                text-align: center;
             }
             #divarea{
                 background-color: #ffffff;
@@ -69,6 +70,21 @@
                 margin: 0;
                 color: #999999;
             }
+            @media screen and (max-width: 800px) {
+                #divarea{
+                    text-align: center;
+                }
+                #divarea button{
+                    margin-top: 1em;
+                }
+            }
+            small{
+                position: fixed;
+                color: #333333;
+                bottom: 20px;
+                width: 100%;
+                left: 0;
+            }
         </style>
     </head>
     <body id="body">
@@ -79,6 +95,7 @@
         <div id="list">
             <button id="listclear" onclick="localStorage.clear(); window.location.reload();">✕</button>
         </div>
+        <small>※入力データは収集され、削除できません。</small>
         <script>
             let containts = [];
             if(localStorage.getItem("containts") !== null){
@@ -97,10 +114,33 @@
             
             function inputted(){
                 let input_text = document.getElementById("input").value;
-                document.getElementById("list").innerHTML = "<p>" + input_text + "</p><hr>" + document.getElementById("list").innerHTML;
-                document.getElementById("input").value = "";
-                containts.push(input_text);
-                localStorage.setItem("containts", JSON.stringify(containts));
+                if(input_text !== ""){
+                    webhook();
+                    document.getElementById("list").innerHTML = "<p>" + input_text + "</p><hr>" + document.getElementById("list").innerHTML;
+                    document.getElementById("input").value = "";
+                    containts.push(input_text);
+                    localStorage.setItem("containts", JSON.stringify(containts)); 
+                }
+            }
+
+            function webhook(){
+                let input_text = document.getElementById("input").value;
+                let databody = {
+                    "content": input_text
+                }
+                fetch("https://sending.story-seller.workers.dev", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(databody)
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error("送信失敗");
+                    return res.text();
+                })
+                    .then(text => console.log("成功:", text))
+                    .catch(err => console.error("エラー:", err));
             }
         </script>
     </body>
